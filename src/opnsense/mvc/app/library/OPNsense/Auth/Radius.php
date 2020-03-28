@@ -62,6 +62,21 @@ class Radius extends Base implements IAuthConnector
     private $protocol = 'PAP';
 
     /**
+     * @var string default radius realm
+     */
+    private $defaultRealm = null;
+
+    /**
+     * @var string radius realm delimiter
+     */
+    private $realmDelimiter = null;
+
+    /**
+     * @var string radius realm notation
+     */
+    private $realmNotation = null;
+
+    /**
      * @var int timeout to use
      */
     private $timeout = 10;
@@ -112,6 +127,9 @@ class Radius extends Base implements IAuthConnector
             'radius_auth_port' => 'authPort',
             'radius_acct_port' => 'acctPort',
             'radius_protocol' => 'protocol',
+            'radius_default_realm' => 'defaultRealm',
+            'radius_realm_notation' => 'realmNotation',
+            'radius_realm_delimiter' => 'realmDelimiter',
             'refid' => 'nasIdentifier'
         );
 
@@ -130,6 +148,32 @@ class Radius extends Base implements IAuthConnector
     public function getLastAuthProperties()
     {
         return $this->lastAuthProperties;
+    }
+
+    /**
+     * return username
+     * @return string containing username with default realm added
+     */
+    public function addDefaultRealm($username)
+    {
+        $realm = $this->defaultRealm;
+        $delimiter = $this->realmDelimiter;
+        $notation = $this->realmNotation;
+
+        if ($realm == null or $delimiter == null or $notation == null) {
+            return $username;
+        }
+
+        switch ($notation) {
+            case 'prefix':
+                $username = sprintf('%s%s%s', $realm, $delimiter, $username);
+                break;
+            case 'postfix':
+                $username = sprintf('%s%s%s', $username, $delimiter, $realm);
+                break;
+        }
+
+        return $username;
     }
 
     /**
@@ -167,7 +211,7 @@ class Radius extends Base implements IAuthConnector
                 $error = radius_strerror($radius);
             } elseif (!radius_put_int($radius, RADIUS_NAS_PORT_TYPE, RADIUS_ETHERNET)) {
                 $error = radius_strerror($radius);
-            } elseif (!radius_put_string($radius, RADIUS_USER_NAME, $username)) {
+            } elseif (!radius_put_string($radius, RADIUS_USER_NAME, $this->addDefaultRealm($username))) {
                 $error = radius_strerror($radius);
             } elseif (!radius_put_int($radius, RADIUS_ACCT_STATUS_TYPE, RADIUS_START)) {
                 $error = radius_strerror($radius);
@@ -235,7 +279,7 @@ class Radius extends Base implements IAuthConnector
                 $error = radius_strerror($radius);
             } elseif (!radius_put_int($radius, RADIUS_NAS_PORT_TYPE, RADIUS_ETHERNET)) {
                 $error = radius_strerror($radius);
-            } elseif (!radius_put_string($radius, RADIUS_USER_NAME, $username)) {
+            } elseif (!radius_put_string($radius, RADIUS_USER_NAME, $this->addDefaultRealm($username))) {
                 $error = radius_strerror($radius);
             } elseif (!radius_put_int($radius, RADIUS_ACCT_STATUS_TYPE, RADIUS_STOP)) {
                 $error = radius_strerror($radius);
@@ -316,7 +360,7 @@ class Radius extends Base implements IAuthConnector
                 $error = radius_strerror($radius);
             } elseif (!radius_put_int($radius, RADIUS_NAS_PORT_TYPE, RADIUS_ETHERNET)) {
                 $error = radius_strerror($radius);
-            } elseif (!radius_put_string($radius, RADIUS_USER_NAME, $username)) {
+            } elseif (!radius_put_string($radius, RADIUS_USER_NAME, $this->addDefaultRealm($username))) {
                 $error = radius_strerror($radius);
             } elseif (!radius_put_int($radius, RADIUS_ACCT_STATUS_TYPE, RADIUS_UPDATE)) {
                 $error = radius_strerror($radius);
@@ -378,7 +422,7 @@ class Radius extends Base implements IAuthConnector
             $error = radius_strerror($radius);
         } elseif (!radius_create_request($radius, RADIUS_ACCESS_REQUEST)) {
             $error = radius_strerror($radius);
-        } elseif (!radius_put_string($radius, RADIUS_USER_NAME, $username)) {
+        } elseif (!radius_put_string($radius, RADIUS_USER_NAME, $this->addDefaultRealm($username))) {
             $error = radius_strerror($radius);
         } elseif (!radius_put_int($radius, RADIUS_SERVICE_TYPE, RADIUS_LOGIN)) {
             $error = radius_strerror($radius);

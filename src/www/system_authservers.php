@@ -99,6 +99,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             $pconfig['radius_acct_port'] = $a_server[$id]['radius_acct_port'];
             $pconfig['radius_secret'] = $a_server[$id]['radius_secret'];
             $pconfig['radius_timeout'] = $a_server[$id]['radius_timeout'];
+            $pconfig['radius_default_realm'] = $a_server[$id]['radius_default_realm'];
+            $pconfig['radius_realm_notation'] = $a_server[$id]['radius_realm_notation'];
+            $pconfig['radius_realm_delimiter'] = $a_server[$id]['radius_realm_delimiter'];
 
             if (!empty($pconfig['radius_auth_port']) &&
                 !empty($pconfig['radius_acct_port'])) {
@@ -256,6 +259,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                   $server['radius_timeout'] = 5;
               }
 
+              if (!empty($pconfig['radius_default_realm'])) {
+                  $server['radius_default_realm'] = $pconfig['radius_default_realm'];
+              } else {
+                  $server['radius_default_realm'] = null;
+              }
+
+              if (!empty($pconfig['radius_realm_delimiter'])) {
+                  $server['radius_realm_delimiter'] = $pconfig['radius_realm_delimiter'];
+              } else{
+                  $server['radius_realm_delimiter'] = null;
+              }
+
+              if (!empty($pconfig['radius_realm_notation'])) {
+                  $server['radius_realm_notation'] = $pconfig['radius_realm_notation'];
+              } else{
+                  $server['radius_realm_notation'] = null;
+              }
+
               if ($pconfig['radius_srvcs'] == "both") {
                   $server['radius_auth_port'] = $pconfig['radius_auth_port'];
                   $server['radius_acct_port'] = $pconfig['radius_acct_port'];
@@ -314,7 +335,8 @@ $all_authfields = array(
     'type','name','ldap_host','ldap_port','ldap_urltype','ldap_protver','ldap_scope',
     'ldap_basedn','ldap_authcn','ldap_extended_query','ldap_binddn','ldap_bindpw','ldap_attr_user',
     'ldap_read_properties', 'ldap_sync_memberof', 'radius_host',
-    'radius_auth_port','radius_acct_port','radius_secret','radius_timeout','radius_srvcs'
+    'radius_auth_port','radius_acct_port','radius_secret','radius_timeout','radius_srvcs',
+    'radius_default_realm', 'radius_realm_notation', 'radius_realm_delimiter',
 );
 
 foreach ($all_authfields as $fieldname) {
@@ -810,6 +832,62 @@ endif; ?>
                       <br /><?= gettext("This value controls how long, in seconds, that the RADIUS server may take to respond to an authentication request.") ?>
                       <br /><?= gettext("If left blank, the default value is 5 seconds.") ?>
                       <br /><br /><?= gettext("NOTE: If you are using an interactive two-factor authentication system, increase this timeout to account for how long it will take the user to receive and enter a token.") ?>
+                    </div>
+                  </td>
+                </tr>
+                <tr id="radius_default_realm" class="auth_radius auth_options hidden">
+                  <td><a id="help_for_radius_default_realm" href="#" class="showhelp"><i class="fa fa-info-circle"></i></a> <?=gettext("Default realm");?></td>
+                  <td>
+                    <input name="radius_default_realm" type="text" id="radius_default_realm" size="20" value="<?=$pconfig['radius_default_realm'];?>"/>
+                    <div class="hidden" data-for="help_for_radius_default_realm">
+                      <br /><?= gettext("Radius realm to add to all usernames before authentication/accounting is attempted.") ?>
+                    </div>
+                  </td>
+                </tr>
+                <tr class="auth_radius auth_options hidden">
+                  <td><a id="help_for_radius_realm_delimiter" href="#" class="showhelp"><i class="fa fa-info-circle"></i></a> <?=gettext("Default realm delimiter");?></td>
+                  <td>
+                    <select name="radius_realm_delimiter" id="radius_realm_delimiter" class="selectpicker" data-style="btn-default">
+                      <option value="" <?=$pconfig['radius_realm_delimiter'] == '' ? "selected=\"selected\"" :"";?>>
+                        <?=gettext('');?>
+                      </option>
+                      <option value="@" <?=$pconfig['radius_realm_delimiter'] == '@' ? "selected=\"selected\"" :"";?>>
+                        <?=gettext('@');?>
+                      </option>
+                      <option value="/" <?=$pconfig['radius_realm_delimiter'] == '/' ? "selected=\"selected\"" :"";?>>
+                        <?=gettext('/');?>
+                      </option>
+                      <option value="!" <?=$pconfig['radius_realm_delimiter'] == '!' ? "selected=\"selected\"" :"";?>>
+                        <?=gettext('!');?>
+                      </option>
+                      <option value="%" <?=$pconfig['radius_realm_delimiter'] == '!' ? "selected=\"selected\"" :"";?>>
+                        <?=gettext('%');?>
+                      </option>
+                      <option value="\\" <?=$pconfig['radius_realm_delimiter'] == '\\' ? "selected=\"selected\"" :"";?>>
+                        <?=gettext('\\');?>
+                      </option>
+                    </select>
+                    <div class="hidden" data-for="help_for_radius_realm_delimiter">
+                      <br /><?= gettext("Delimiter to add between username and the default realm.") ?>
+                    </div>
+                  </td>
+                </tr>
+                <tr class="auth_radius auth_options hidden">
+                  <td><a id="help_for_radius_realm_notation" href="#" class="showhelp"><i class="fa fa-info-circle"></i></a> <?=gettext("Default realm notation");?></td>
+                  <td>
+                    <select name="radius_realm_notation" id="radius_realm_notation" class="selectpicker" data-style="btn-default">
+                      <option value="" <?=$pconfig['radius_realm_notation'] == '' ? "selected=\"selected\"" :"";?>>
+                        <?=gettext('');?>
+                      </option>
+                      <option value="prefix" <?=$pconfig['radius_realm_notation'] == 'prefix' ? "selected=\"selected\"" :"";?>>
+                        <?=gettext('Prefix');?>
+                      </option>
+                      <option value="postfix" <?=$pconfig['radius_realm_notation'] == 'postfix' ? "selected=\"selected\"" :"";?>>
+                        <?=gettext('Postfix');?>
+                      </option>
+                    </select>
+                    <div class="hidden" data-for="help_for_radius_realm_notation">
+                      <br /><?= gettext("Add the default realm to either the beginning or end of the username.") ?>
                     </div>
                   </td>
                 </tr>
